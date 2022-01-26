@@ -16,7 +16,7 @@ def homepage():
     <img src="http://loremflickr.com/600/400" />
     """.format(time=the_time)
 
-@app.route('/analyze', methods=['GET'])
+@app.route('/analyze', methods=['POST'])
 def analyze():
   openai.api_key = os.getenv("OPENAI_API_KEY")
   json_data = request.json
