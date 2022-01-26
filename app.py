@@ -21,19 +21,45 @@ def analyze():
   openai.api_key = os.getenv("OPENAI_API_KEY")
   json_data = request.json
   msg = json_data["msg"]
-  is_harmful_response = openai.Completion.create(
+  is_sexist_response = openai.Completion.create(
     engine="text-davinci-001",
-    prompt="Is the following message harmful, yes or no? Then explain why. " + str(msg),
-    temperature=0.1,
-    max_tokens=64,
+    prompt="Classify the following texts into  'sexist', or 'not sexist'.\n'That girl still need a good ass whooping, stupid ass bitch!!': sexist.\n'She is heavily relying on him to turn the other cheek...tough talking demon infested woman': sexist.\n'Women are more likely to be diagnosed with breast cancer': not sexist\n'She's kind of mean': not sexist\n " + str(msg) + ":",
+    temperature=0.0,
+    max_tokens=20,
     top_p=1,
     frequency_penalty=0,
     presence_penalty=0
   )
-  stripped_harmful_response = " ".join(is_harmful_response["choices"][0]["text"].split())
-  is_harmful = True if is_harmful_response["choices"][0]["text"].find("is harmful") >= 0 else False
-  return {"harmful_evaluation": is_harmful, "harmful_gpt_reason": stripped_harmful_response}
+  is_sexist = False if is_sexist_response["choices"][0]["text"].find("not sexist") >= 0 else True
 
+  is_racist_response = openai.Completion.create(
+    engine="text-davinci-001",
+    prompt="Classify the following texts into  'racist', or 'not racist'.\n'I hate chinese people': racist.\n'White people are bad at ping pong': racist.\n'I hate Chinese food': not racist\n'I have many friends who are indian and white': not racist\n " + str(msg) + ":",
+    temperature=0.0,
+    max_tokens=20,
+    top_p=1,
+    frequency_penalty=0,
+    presence_penalty=0
+  )
+  is_racist = False if is_racist_response["choices"][0]["text"].find("not racist") >= 0 else True
+
+  is_spam_response = openai.Completion.create(
+    engine="text-davinci-001",
+    prompt="Classify the following texts into  'spam', or 'not spam'.\n'Here's a link where you can get free bitcoin': spam\n'I can give you some free ethereum': spam\n'Let's play some fortnite together': not spam\n'I love using ethereum for transactions': not spam\n " + str(msg) + ":",
+    temperature=0.0,
+    max_tokens=20,
+    top_p=1,
+    frequency_penalty=0,
+    presence_penalty=0
+  )
+  is_spam = False if is_spam_response["choices"][0]["text"].find("not spam") >= 0 else True
+  return {"is_sexist": is_sexist,
+  "is_sexist_response": is_sexist_response["choices"][0]["text"],
+  "is_racist": is_racist, 
+  "is_racist_response": is_racist_response["choices"][0]["text"],
+  "is_spam": is_spam,
+  "is_spam_response": is_spam_response["choices"][0]["text"]
+  }
 
 if __name__ == '__main__':
     app.run(debug=True, use_reloader=True)
