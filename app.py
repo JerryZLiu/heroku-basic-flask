@@ -61,6 +61,69 @@ def analyze():
   "is_spam_response": is_spam_response["choices"][0]["text"]
   }
 
+@app.route('/analyzev2', methods=['POST'])
+def analyzev2():
+  openai.api_key = os.getenv("OPENAI_API_KEY")
+  json_data = request.json
+  msg = json_data["msg"]
+  is_sexist_response = openai.Completion.create(
+    engine="text-davinci-001",
+    prompt="Classify the following text into 'sexist' or 'not sexist'.\n" + str(msg) + ":",
+    temperature=0.0,
+    max_tokens=20,
+    top_p=1,
+    frequency_penalty=0,
+    presence_penalty=0
+  )
+  is_sexist = False if is_sexist_response["choices"][0]["text"].find("not sexist") >= 0 else True
+
+  is_racist_response = openai.Completion.create(
+    engine="text-davinci-001",
+    prompt="Classify the following text into 'racist' or 'not racist'.\n" + str(msg) + ":",
+    temperature=0.0,
+    max_tokens=20,
+    top_p=1,
+    frequency_penalty=0,
+    presence_penalty=0
+  )
+  is_racist = False if is_racist_response["choices"][0]["text"].find("not racist") >= 0 else True
+
+  is_spam_response = openai.Completion.create(
+    engine="text-davinci-001",
+    prompt="Classify the following texts into  'spam', or 'not spam'.\n" + str(msg) + ":",
+    temperature=0.0,
+    max_tokens=20,
+    top_p=1,
+    frequency_penalty=0,
+    presence_penalty=0
+  )
+  is_spam = False if is_spam_response["choices"][0]["text"].find("not spam") >= 0 else True
+
+  harmful_response = openai.Completion.create(
+    engine="text-davinci-001",
+    prompt="Why is the following message harmful?\n" + str(msg) + ":",
+    temperature=0.0,
+    max_tokens=50,
+    top_p=1,
+    frequency_penalty=0,
+    presence_penalty=0
+  )
+
+  if is_racist or is_sexist or is_spam:
+    response = "This may be harmful content. Reasoning: " + harmful_response["choices"][0]["text"]
+  else: 
+    response = "There doesn't appear to be any harmful content."
+
+  return {
+    "response": response,
+    "is_sexist": is_sexist,
+  "is_sexist_response": is_sexist_response["choices"][0]["text"],
+  "is_racist": is_racist, 
+  "is_racist_response": is_racist_response["choices"][0]["text"],
+  "is_spam": is_spam,
+  "is_spam_response": is_spam_response["choices"][0]["text"]
+  }
+
 if __name__ == '__main__':
-    app.run(debug=True, use_reloader=True)
+    app.run(host = "0.0.0.0", debug=True, use_reloader=True)
 
